@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Программа страхования «ПРО Накопления»</title>
+    <!-- Подключение Tailwind CSS для быстрой и красивой стилизации -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .fade-enter {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        .fade-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 300ms ease-out, transform 300ms ease-out;
+        }
+        
+        /* Стилизация радио-кнопок */
+        input[type="radio"]:checked + div {
+            background-color: #EFF6FF; /* blue-50 */
+            border-color: #3B82F6; /* blue-500 */
+        }
+        input[type="radio"]:checked + div .radio-inner {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
+        
+        <!-- Шапка теста -->
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold">Проверка знаний</h1>
+            <p class="text-blue-100 mt-2">Программа страхования «ПРО Накопления»</p>
+        </div>
+
+        <!-- Контейнер самого теста -->
+        <div id="test-container" class="p-6 sm:p-8">
+            
+            <!-- Прогресс бар -->
+            <div class="mb-6">
+                <div class="flex justify-between text-sm font-medium text-slate-500 mb-2">
+                    <span id="progress-text">Вопрос 1 из 15</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 6.66%"></div>
+                </div>
+            </div>
+
+            <!-- Блок вопроса -->
+            <div id="question-block" class="fade-enter fade-enter-active">
+                <h2 id="question-text" class="text-lg sm:text-xl font-semibold text-slate-800 mb-6">
+                    <!-- Текст вопроса появится здесь -->
+                </h2>
+                
+                <!-- Варианты ответов -->
+                <div id="options-container" class="space-y-3">
+                    <!-- Опции генерируются динамически -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Контейнер результатов (изначально скрыт) -->
+        <div id="result-container" class="p-6 sm:p-8 text-center hidden">
+            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Тест завершен!</h2>
+            <p class="text-lg text-slate-600 mb-6">Ваш результат: <span id="score-text" class="font-bold text-blue-600 text-2xl">0</span> из 15</p>
+            <p id="feedback-text" class="text-slate-500 mb-8"></p>
+            <button onclick="initTest()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors w-full sm:w-auto">
+                Пройти тест заново
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Данные теста на основе предоставленного ТЗ
+        const questionsData = [
+            {
+                question: "К какому индикатору денежного рынка привязана доходность программы «ПРО Накопления»?",
+                options: [
+                    "A) Ключевая ставка ЦБ РФ",
+                    "B) Индекс Мосбиржи",
+                    "C) RUONIA",
+                    "D) Инфляция"
+                ],
+                correctIndex: 2 // C
+            },
+            {
+                question: "Как часто происходит начисление дохода (капитализация) на средства клиента?",
+                options: [
+                    "A) Раз в месяц",
+                    "B) Ежедневно",
+                    "C) Раз в квартал",
+                    "D) Ежегодно"
+                ],
+                correctIndex: 1 // B
+            },
+            {
+                question: "Может ли страховая сумма уменьшиться в течение срока действия программы?",
+                options: [
+                    "A) Да, если ставка RUONIA станет отрицательной",
+                    "B) Да, в первый год действия договора",
+                    "C) Нет, программа гарантирует отсутствие потерь с 1-го дня",
+                    "D) Да, при падении фондового рынка"
+                ],
+                correctIndex: 2 // C
+            },
+            {
+                question: "Какая сумма выплачивается клиенту при досрочном расторжении договора в первые 6 месяцев?",
+                options: [
+                    "A) 100% страховой премии плюс накопленный доход",
+                    "B) 100% страховой премии без дохода",
+                    "C) 80% от внесенной суммы",
+                    "D) Выплата не производится"
+                ],
+                correctIndex: 1 // B
+            },
+            {
+                question: "Чему равен размер дисконта при выплате по окончании срока действия договора (по риску «Дожитие»)?",
+                options: [
+                    "A) 0%",
+                    "B) 1,9%",
+                    "C) 2,5%",
+                    "D) Зависит от ставки RUONIA"
+                ],
+                correctIndex: 1 // B
+            },
+            {
+                question: "Как изменяется размер дисконта при досрочном расторжении договора с течением времени (начиная с 7-го месяца)?",
+                options: [
+                    "A) Остается неизменным на протяжении всего срока",
+                    "B) Увеличивается каждый год",
+                    "C) Уменьшается в зависимости от даты расторжения",
+                    "D) Рассчитывается индивидуально андеррайтером"
+                ],
+                correctIndex: 2 // C
+            },
+            {
+                question: "Какой размер дисконта применяется при досрочном расторжении договора в период от 1 года до 2 лет?",
+                options: [
+                    "A) 5%",
+                    "B) 4%",
+                    "C) 3%",
+                    "D) 1,9%"
+                ],
+                correctIndex: 1 // B
+            },
+            {
+                question: "По какой формуле рассчитывается сумма накоплений на текущий день?",
+                options: [
+                    "A) Сумма вчера × (1 + RUONIA / 365)",
+                    "B) Сумма вчера × (1 + (RUONIA - Дисконт) / 365)",
+                    "C) Взнос × (RUONIA - Дисконт)",
+                    "D) Взнос + (Взнос × RUONIA / 100)"
+                ],
+                correctIndex: 1 // B
+            },
+            {
+                question: "На какой срок заключается договор страхования «ПРО Накопления»?",
+                options: [
+                    "A) 1 год",
+                    "B) 3 года",
+                    "C) 5 лет",
+                    "D) Бессрочно"
+                ],
+                correctIndex: 2 // C
+            },
+            {
+                question: "Какова периодичность оплаты страхового взноса по данной программе?",
+                options: [
+                    "A) Ежемесячно",
+                    "B) Ежеквартально",
+                    "C) Ежегодно",
+                    "D) Единовременно"
+                ],
+                correctIndex: 3 // D
+            },
+            {
+                question: "Каков минимальный размер взноса для участия в программе?",
+                options: [
+                    "A) 10 000 ₽",
+                    "B) 30 000 ₽",
+                    "C) 50 000 ₽",
+                    "D) 100 000 ₽"
+                ],
+                correctIndex: 2 // C
+            },
+            {
+                question: "Сколько составляет «период охлаждения» по договору?",
+                options: [
+                    "A) 7 календарных дней",
+                    "B) 14 календарных дней",
+                    "C) 30 календарных дней",
+                    "D) Период охлаждения не предусмотрен"
+                ],
+                correctIndex: 1 // B
+            },
+            {
+                question: "Допускаются ли финансовые изменения по договору страхования в течение его срока действия?",
+                options: [
+                    "A) Да, в любой момент",
+                    "B) Да, но только один раз в год",
+                    "C) Не предусмотрены",
+                    "D) Да, с удержанием комиссии"
+                ],
+                correctIndex: 2 // C
+            },
+            {
+                question: "Каков максимальный размер взноса для застрахованного лица в возрасте от 18 до 65 лет на дату заключения договора?",
+                options: [
+                    "A) 30 000 000 ₽",
+                    "B) 50 000 000 ₽",
+                    "C) 100 000 000 ₽",
+                    "D) Не ограничен"
+                ],
+                correctIndex: 2 // C
+            },
+            {
+                question: "Какие штрафы и комиссии взимаются с клиента при досрочном выходе из программы?",
+                options: [
+                    "A) 10% от суммы взноса",
+                    "B) Комиссия за ведение счета",
+                    "C) Штрафы и комиссии не предусмотрены",
+                    "D) 2% от накопленного дохода"
+                ],
+                correctIndex: 2 // C
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isTransitioning = false; // Защита от двойного клика
+
+        const testContainer = document.getElementById('test-container');
+        const resultContainer = document.getElementById('result-container');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const progressText = document.getElementById('progress-text');
+        const progressBar = document.getElementById('progress-bar');
+        const questionBlock = document.getElementById('question-block');
+
+        // Инициализация / Сброс теста
+        function initTest() {
+            currentQuestionIndex = 0;
+            score = 0;
+            isTransitioning = false;
+            
+            resultContainer.classList.add('hidden');
+            testContainer.classList.remove('hidden');
+            
+            renderQuestion();
+        }
+
+        // Отрисовка текущего вопроса
+        function renderQuestion() {
+            const currentQ = questionsData[currentQuestionIndex];
+            
+            // Анимация появления
+            questionBlock.classList.remove('fade-enter-active');
+            void questionBlock.offsetWidth; // Trigger reflow
+            questionBlock.classList.add('fade-enter-active');
+
+            // Обновление прогресса
+            progressText.innerText = `Вопрос ${currentQuestionIndex + 1} из ${questionsData.length}`;
+            const progressPercent = ((currentQuestionIndex) / questionsData.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Текст вопроса
+            questionText.innerText = currentQ.question;
+
+            // Очистка предыдущих вариантов
+            optionsContainer.innerHTML = '';
+
+            // Создание вариантов ответов
+            currentQ.options.forEach((optionText, index) => {
+                const label = document.createElement('label');
+                label.className = "relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm hover:border-blue-400 focus:outline-none transition-all";
+                
+                // Скрытый input radio
+                const input = document.createElement('input');
+                input.type = "radio";
+                input.name = "question_option";
+                input.value = index;
+                input.className = "sr-only"; // Скрыт для визуального стиля
+                
+                input.addEventListener('change', () => handleAnswerSelect(index));
+
+                // Визуальная часть кнопки
+                const visualBox = document.createElement('div');
+                visualBox.className = "flex w-full items-center justify-between border-transparent rounded-lg border-2 -m-4 p-4 transition-colors";
+                
+                const flexWrapper = document.createElement('div');
+                flexWrapper.className = "flex items-center";
+
+                // Кастомный радио-кружок
+                const radioCircle = document.createElement('div');
+                radioCircle.className = "radio-inner h-5 w-5 rounded-full border-2 border-slate-300 flex items-center justify-center mr-3 transition-colors";
+                // Внутренняя точка для состояния checked
+                radioCircle.innerHTML = '<div class="h-2.5 w-2.5 rounded-full bg-white"></div>';
+
+                const textSpan = document.createElement('span');
+                textSpan.className = "text-sm sm:text-base font-medium text-slate-800 select-none";
+                textSpan.innerText = optionText;
+
+                flexWrapper.appendChild(radioCircle);
+                flexWrapper.appendChild(textSpan);
+                visualBox.appendChild(flexWrapper);
+
+                label.appendChild(input);
+                label.appendChild(visualBox);
+                
+                optionsContainer.appendChild(label);
+            });
+        }
+
+        // Обработка выбора ответа
+        function handleAnswerSelect(selectedIndex) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+
+            const currentQ = questionsData[currentQuestionIndex];
+            
+            // Проверка правильности (начисляем балл в фоне)
+            if (selectedIndex === currentQ.correctIndex) {
+                score++;
+            }
+
+            // Небольшая задержка перед переходом, чтобы пользователь увидел, что выбрал
+            setTimeout(() => {
+                currentQuestionIndex++;
+
+                if (currentQuestionIndex < questionsData.length) {
+                    renderQuestion();
+                    isTransitioning = false;
+                } else {
+                    showResults();
+                }
+            }, 350); // 350 мс задержки
+        }
+
+        // Показ результатов
+        function showResults() {
+            testContainer.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+            
+            progressBar.style.width = '100%'; // Заполняем до конца
+            document.getElementById('score-text').innerText = score;
+
+            const feedbackEl = document.getElementById('feedback-text');
+            if (score === questionsData.length) {
+                feedbackEl.innerText = "Идеальный результат! Вы отлично знаете все условия программы.";
+            } else if (score >= 10) {
+                feedbackEl.innerText = "Хороший результат! Вы усвоили большую часть материала.";
+            } else {
+                feedbackEl.innerText = "Стоит еще раз внимательно ознакомиться с условиями программы.";
+            }
+        }
+
+        // Запуск при загрузке
+        window.onload = initTest;
+    </script>
+</body>
+</html>
